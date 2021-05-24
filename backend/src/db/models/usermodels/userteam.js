@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const userteamSchema = mongoose.Schema({
+const teamSchema = mongoose.Schema({
   teamName: {
     type: String,
     required: true,
@@ -24,6 +24,6 @@ teamSchema.virtual("wrestlers", {
   foreignField: "team",
 });
 
-const Team = mongoose.model("Team", teamSchema);
+const UserTeam = mongoose.model("UserTeam", teamSchema);
 
-module.exports = Team;
+module.exports = UserTeam;

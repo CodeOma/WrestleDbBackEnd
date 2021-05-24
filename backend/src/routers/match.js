@@ -101,6 +101,7 @@ router.get("/match/wrestler/:id", async (req, res) => {
     if (req.query.filters) {
       const filter = req.query.filters;
       const wrestler = await wrestlerMatches(req.params.id, filter);
+      console.log(wrestler);
       res.status(200).send(wrestler);
     } else {
       const wrestler = await wrestlerMatches(req.params.id);
@@ -148,8 +149,25 @@ router.get("/autosearch/match/:key", async (req, res) => {
 });
 
 /////////PUT(Update/Create)///////////
-router.put("/match/:id", async (req, res) => {
+router.put("/match/:id", checkIfAuthenticated, async (req, res) => {
   try {
+    //Validation
+    console.log(req.params);
+    console.log(req.body);
+
+    const match = await Match.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    console.log(match);
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
+////////////DELETE////////////////
+router.put("/match/:id", checkIfAuthenticated, async (req, res) => {
+  try {
+    //Validation
     console.log(req.params);
     console.log(req.body);
 

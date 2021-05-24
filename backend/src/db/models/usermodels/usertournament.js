@@ -14,6 +14,11 @@ const tournamentSchema = mongoose.Schema({
   month: {
     type: String,
   },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "User",
+  },
 });
 
 tournamentSchema.virtual("matches", {
@@ -22,6 +27,6 @@ tournamentSchema.virtual("matches", {
   foreignField: "tournament",
 });
 
-const Tournament = mongoose.model("Tournament", tournamentSchema);
+const UserTournament = mongoose.model("UserTournament", tournamentSchema);
 
-module.exports = Tournament;
+module.exports = UserTournament;

@@ -1,7 +1,8 @@
-const Team = require("../db/models/team");
+const Tournament = require("../db/models/tournament");
 const mongoose = require("mongoose");
 const { createFilterOptions } = require("../helpers/helpers");
-const teamMatches = async (id, filters, skip) => {
+
+const tournamentMatches = async (id, filters, skip) => {
   try {
     let skipMatches = {
       $skip: parseInt(skip),
@@ -76,7 +77,7 @@ const teamMatches = async (id, filters, skip) => {
         };
       }
     }
-    const doc = await Team.aggregate([
+    const doc = await Tournament.aggregate([
       {
         $match: {
           _id: mongoose.Types.ObjectId(id),
@@ -85,28 +86,9 @@ const teamMatches = async (id, filters, skip) => {
       {
         $lookup: {
           from: "matches",
-          localField: "teamName",
-          foreignField: "redWrestler.team",
-          as: "redMatches",
-        },
-      },
-      {
-        $lookup: {
-          from: "matches",
-          localField: "teamName",
-          foreignField: "blueWrestler.team",
-          as: "blueMatches",
-        },
-      },
-      {
-        $project: {
-          teamName: 1,
-          matches: ["$redMatches", "$blueMatches"],
-        },
-      },
-      {
-        $unwind: {
-          path: "$matches",
+          localField: "_id",
+          foreignField: "tournament",
+          as: "matches",
         },
       },
       {
@@ -117,7 +99,7 @@ const teamMatches = async (id, filters, skip) => {
       {
         $project: {
           teamName: 1,
-          tournament: "$matches.tournament",
+          tournamentName: "$name",
           style: "$matches.style",
           weightClass: "$matches.weightClass",
           round: "$matches.round",
@@ -126,8 +108,8 @@ const teamMatches = async (id, filters, skip) => {
               {
                 $eq: ["$matches.redWrestler.team", "$teamName"],
               },
-              "$matches.redWrestler.id",
-              "$matches.blueWrestler.id",
+              "$matches.redWrestler",
+              "$matches.blueWrestler",
             ],
           },
           opponent: {
@@ -135,8 +117,8 @@ const teamMatches = async (id, filters, skip) => {
               {
                 $ne: ["$matches.redWrestler.team", "$teamName"],
               },
-              "$matches.redWrestler.id",
-              "$matches.blueWrestler.id",
+              "$matches.redWrestler",
+              "$matches.blueWrestler",
             ],
           },
           scores: "$matches.scores",
@@ -146,69 +128,9 @@ const teamMatches = async (id, filters, skip) => {
       },
       {
         $project: {
-          teamName: 1,
-          tournament: 1,
-          style: 1,
-          weightClass: 1,
-          round: 1,
-          wrestler: {
-            $toObjectId: "$wrestler",
-          },
-          opponent: {
-            $toObjectId: "$opponent",
-          },
-          scores: 1,
-          url: 1,
-          result: 1,
-        },
-      },
-      {
-        $lookup: {
-          from: "wrestlers",
-          localField: "wrestler",
-          foreignField: "_id",
-          as: "wrestler",
-        },
-      },
-      {
-        $lookup: {
-          from: "wrestlers",
-          localField: "opponent",
-          foreignField: "_id",
-          as: "opponent",
-        },
-      },
-      {
-        $lookup: {
-          from: "tournaments",
-          localField: "tournament",
-          foreignField: "_id",
-          as: "tournamentName",
-        },
-      },
-      {
-        $unwind: {
-          path: "$tournamentName",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $unwind: {
-          path: "$wrestler",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $unwind: {
-          path: "$opponent",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $project: {
           id: 1,
           teamName: 1,
-          tournamentName: "$tournamentName.name",
+          tournamentName: 1,
           style: 1,
           round: 1,
           weightClass: 1,
@@ -224,23 +146,47 @@ const teamMatches = async (id, filters, skip) => {
               "lost",
             ],
           },
+          wrestlerScores: {
+            $filter: {
+              input: "$scores",
+              as: "sc",
+              cond: {
+                $eq: ["$$sc.fullName", "$wrestler.fullName"],
+              },
+            },
+          },
+          opponentScores: {
+            $filter: {
+              input: "$scores",
+              as: "sc",
+              cond: {
+                $ne: ["$$sc.fullName", "$wrestler.fullName"],
+              },
+            },
+          },
           url: 1,
         },
       },
-      filter,
-      skipMatches,
+      {
+        $unwind: {
+          path: "$wrestlerScores",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$opponentScores",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      // filter,
+      // skipMatches,
     ]);
 
     const fields = await createFilterOptions(doc);
-    console.log(fields);
     return { matches: doc.slice(0, 20), filters: fields };
   } catch (e) {
     console.log(e);
   }
 };
-
-exports.teamMatches = teamMatches;
-
-// "_id": {
-//   "$toObjectId": "$_id"
-// }
+exports.tournamentMatches = tournamentMatches;

@@ -663,18 +663,18 @@ const wrestlerMatches = async (id, filters, skip) => {
           },
         },
       },
-      // {
-      //   $unwind: {
-      //     path: "$wrestlerScores",
-      //     preserveNullAndEmptyArrays: true,
-      //   },
-      // },
-      // {
-      //   $unwind: {
-      //     path: "$opponentScores",
-      //     preserveNullAndEmptyArrays: true,
-      //   },
-      // },
+      {
+        $unwind: {
+          path: "$wrestlerScores",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$opponentScores",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
 
       filter,
       skipMatches,

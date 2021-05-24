@@ -31,16 +31,30 @@ const allTechniques = async (id, filters, skip) => {
     console.log(convertFilters(filters));
     const doc = await Match.aggregate([
       {
-        $unwind: {
-          path: "$scores",
+        $project: {
+          _id: 1,
+          url: "$url",
+          style: 1,
+          weightClass: 1,
+          redWrestler: 1,
+          blueWrestler: 1,
+          scores: {
+            $filter: {
+              input: "$scores.totalScores",
+              as: "sc",
+              cond: {
+                $ne: ["$$sc.takedown", []],
+              },
+            },
+          },
         },
       },
       {
-        $match: {
-          "scores.takedown": {
-            $exists: true,
-            $ne: null,
-          },
+        $unwind: "$scores",
+      },
+      {
+        $unwind: {
+          path: "$scores",
         },
       },
       {
@@ -82,12 +96,10 @@ const allTechniques = async (id, filters, skip) => {
           points: "$scores.points",
         },
       },
-
       filter,
       skipTech,
     ]);
     const fields = await createTechFilterOptions(doc);
-
     return { matches: doc.slice(0, 20), filters: fields };
   } catch (e) {
     console.log(e);

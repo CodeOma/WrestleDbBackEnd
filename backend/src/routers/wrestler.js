@@ -45,44 +45,6 @@ router.get("/wrestler/team/:team", async (req, res) => {
     res.status(400).send();
   }
 });
-////BY ROUND///
-router.get("/wrestler/round/:round", async (req, res) => {
-  try {
-    console.log(req.params.round);
-    const roundfunc = () => {
-      if (req.params.round === "round16") {
-        return "1/16 Final";
-      }
-      if (req.params.round === "round8") {
-        return "1/8 Final";
-      }
-      if (req.params.round === "round4") {
-        return "1/4 Final";
-      }
-      if (req.params.round === "round2") {
-        return "1/2 Final";
-      }
-      if (req.params.round === "final") {
-        return "Final 1-2";
-      }
-      if (req.params.round === "repechage") {
-        return "Repechage";
-      }
-      if (req.params.round === "final3") {
-        return "Final 3-5";
-      }
-      if (req.params.round === "Qualif") {
-        return "Qualif";
-      }
-    };
-    const round = roundfunc(req.params.round);
-    console.log(round);
-    const match = await Match.find({ round });
-    res.status(200).send(match);
-  } catch (e) {
-    res.status(400).send();
-  }
-});
 
 ////////////PUT (UPDATE/CREATE)//////////////
 router.put("/wrestler", async (req, res) => {
@@ -135,6 +97,67 @@ router.get("/autosearch/wrestler/:key", async (req, res) => {
   }
 });
 
+////////////Get ALL FOR CREATOR//////////////
+router.get("/wrestler/all", checkIfAuthenticated, async (req, res) => {
+  try {
+    //Validation
+    console.log(req.authId);
+
+    console.log(req.params);
+    console.log(req.body);
+
+    const wrestler = await Wrestler.find(
+      { _id: req.params.id, owner: req.authId },
+      req.body,
+      {
+        new: true,
+      }
+    );
+    console.log(match);
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+/////////////UPDATE///////////////
+router.put("/wrestler/:id", checkIfAuthenticated, async (req, res) => {
+  try {
+    //Validation
+    console.log(req.authId);
+
+    console.log(req.params);
+    console.log(req.body);
+
+    const wrestler = await Wrestler.findOneAndUpdate(
+      { _id: req.params.id, owner: req.authId },
+      req.body,
+      {
+        new: true,
+      }
+    );
+    console.log(match);
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+////////////DELETE////////////////
+router.delete("/wrestler/:id", checkIfAuthenticated, async (req, res) => {
+  try {
+    //Validation
+    console.log(req.params);
+    console.log(req.body);
+
+    const wrestler = await Wrestler.findOneAndDelete(
+      { _id: req.params.id, owner: req.authId },
+      req.body,
+      {
+        new: true,
+      }
+    );
+    console.log(match);
+  } catch (e) {
+    res.status(500).send();
+  }
+});
 module.exports = router;
 
 ///////Create////////

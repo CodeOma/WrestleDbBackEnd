@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 
 const wrestlerSchema = mongoose.Schema({
-  fullName: { type: String },
-  lastName: { type: String },
+  fullName: { type: String, required: true },
+  lastName: { type: String, required: true },
   team: { type: mongoose.Schema.Types.String, required: true },
 });
 

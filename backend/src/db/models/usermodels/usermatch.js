@@ -35,8 +35,13 @@ const matchSchema = mongoose.Schema({
   url: {},
 
   scores: [],
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "User",
+  },
 });
 
-const Match = mongoose.model("Match", matchSchema);
+const UserMatch = mongoose.model("UserMatch", matchSchema);
 
-module.exports = Match;
+module.exports = UserMatch;

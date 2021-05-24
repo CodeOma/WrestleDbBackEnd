@@ -123,59 +123,21 @@ const teamMatches = async (id, filters, skip) => {
           round: "$matches.round",
           wrestler: {
             $cond: [
-              {
-                $eq: ["$matches.redWrestler.team", "$teamName"],
-              },
-              "$matches.redWrestler.id",
-              "$matches.blueWrestler.id",
+              { $eq: ["$matches.redWrestler.team", "$teamName"] },
+              "$matches.redWrestler",
+              "$matches.blueWrestler",
             ],
           },
           opponent: {
             $cond: [
-              {
-                $ne: ["$matches.redWrestler.team", "$teamName"],
-              },
-              "$matches.redWrestler.id",
-              "$matches.blueWrestler.id",
+              { $ne: ["$matches.redWrestler.team", "$teamName"] },
+              "$matches.redWrestler",
+              "$matches.blueWrestler",
             ],
           },
           scores: "$matches.scores",
           url: "$matches.url",
           result: "$matches.result",
-        },
-      },
-      {
-        $project: {
-          teamName: 1,
-          tournament: 1,
-          style: 1,
-          weightClass: 1,
-          round: 1,
-          wrestler: {
-            $toObjectId: "$wrestler",
-          },
-          opponent: {
-            $toObjectId: "$opponent",
-          },
-          scores: 1,
-          url: 1,
-          result: 1,
-        },
-      },
-      {
-        $lookup: {
-          from: "wrestlers",
-          localField: "wrestler",
-          foreignField: "_id",
-          as: "wrestler",
-        },
-      },
-      {
-        $lookup: {
-          from: "wrestlers",
-          localField: "opponent",
-          foreignField: "_id",
-          as: "opponent",
         },
       },
       {
@@ -189,18 +151,6 @@ const teamMatches = async (id, filters, skip) => {
       {
         $unwind: {
           path: "$tournamentName",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $unwind: {
-          path: "$wrestler",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $unwind: {
-          path: "$opponent",
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -224,11 +174,44 @@ const teamMatches = async (id, filters, skip) => {
               "lost",
             ],
           },
+          wrestlerScores: {
+            $filter: {
+              input: "$scores",
+              as: "sc",
+              cond: {
+                $eq: ["$$sc.fullName", "$wrestler.fullName"],
+              },
+            },
+          },
+          opponentScores: {
+            $filter: {
+              input: "$scores",
+              as: "sc",
+              cond: {
+                $ne: ["$$sc.fullName", "$wrestler.fullName"],
+              },
+            },
+          },
           url: 1,
+        },
+      },
+      {
+        $unwind: {
+          path: "$wrestlerScores",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$opponentScores",
+          preserveNullAndEmptyArrays: true,
         },
       },
       filter,
       skipMatches,
+      // {
+      //   $limit: 20,
+      // },
     ]);
 
     const fields = await createFilterOptions(doc);
@@ -240,7 +223,3 @@ const teamMatches = async (id, filters, skip) => {
 };
 
 exports.teamMatches = teamMatches;
-
-// "_id": {
-//   "$toObjectId": "$_id"
-// }

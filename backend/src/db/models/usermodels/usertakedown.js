@@ -12,10 +12,6 @@ const timestampSchema = mongoose.Schema({
   points: 0,
 });
 const takedownSchema = mongoose.Schema({
-  category: {
-    type: String,
-    required: true,
-  },
   takedown: {
     type: String,
     required: true,
@@ -29,6 +25,11 @@ const takedownSchema = mongoose.Schema({
     type: String,
     required: true,
     // enum: ["admin", "user", "course"],
+  },
+  category: {
+    type: String,
+    required: true,
+    enum: ["offensive", "defensive", "other"],
   },
   offdef: {
     type: String,
@@ -93,10 +94,16 @@ const categorySchema = mongoose.Schema({
   },
 });
 
-const Takedown = mongoose.model("Takedown", takedownSchema);
-const Position = mongoose.model("Position", positionSchema);
-const Tag = mongoose.model("Tag", tagSchema);
-const Type = mongoose.model("Type", typeSchema);
-const Category = mongoose.model("Category", categorySchema);
+const UserTakedown = mongoose.model("UserTakedown", takedownSchema);
+const UserPosition = mongoose.model("UserPosition", positionSchema);
+const UserTag = mongoose.model("UserTag", tagSchema);
+const UserType = mongoose.model("UserType", typeSchema);
+const UserCategory = mongoose.model("UserCategory", categorySchema);
 
-module.exports = { Takedown, Position, Tag, Type, Category };
+module.exports = {
+  UserTakedown,
+  UserType,
+  UserPosition,
+  UserTag,
+  UserCategory,
+};
