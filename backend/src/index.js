@@ -1,8 +1,8 @@
+require("dotenv").config({ path: "../.env" });
+
 const express = require("express");
 require("./auth/firebase");
 require("./db/mongoose.js");
-
-require("./management/turnOldtoId.js");
 ///
 const Wrestler = require("./db/models/wrestler");
 const Match = require("./db/models/match");
@@ -59,7 +59,6 @@ app.use(positionRouter);
 // correctDups();
 
 const port = process.env.PORT || 5000;
-
 
 app.listen(port, () => {
   console.log(`listening on ${port}`);
