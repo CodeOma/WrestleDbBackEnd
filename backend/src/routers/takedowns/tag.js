@@ -1,6 +1,7 @@
 const express = require("express");
 const router = new express.Router();
-const { UserTag } = require("../../db/models/usermodels/usertakedown");
+const { Tag } = require("../../db/models/takedown");
+const { tagCheck } = require("../../helpers/errorhandling");
 const { checkIfAuthenticated, checkIfAdmin } = require("../../middleware/auth");
 
 // TAKEDOWN
@@ -8,12 +9,9 @@ const { checkIfAuthenticated, checkIfAdmin } = require("../../middleware/auth");
 ////////////PUT (UPDATE/CREATE)//////////////
 router.post("/user/tag", checkIfAuthenticated, async (req, res) => {
   try {
-    console.log(req.body, "yeet");
-    // console.log(req.body.tag);
-    // console.log(req.body._id);
-
     if (req.body.tag !== "" && req.authId) {
-      const tag1 = await UserTag.findOneAndUpdate(
+      tagCheck(req.body);
+      const tag1 = await Tag.findOneAndUpdate(
         {
           tag: req.body.tag,
           owner: req.authId,
@@ -25,13 +23,13 @@ router.post("/user/tag", checkIfAuthenticated, async (req, res) => {
         }
       );
       res.status(200).send(tag1);
-      // console.log(tag1);
+
+      console.log(tag1);
     } else {
       throw new Error("Invalid tag Format");
     }
   } catch (e) {
-    console.log(e);
-    res.status(500).send();
+    res.status(500).send(e);
   }
 });
 
@@ -45,7 +43,7 @@ router.get(
       let query = {
         $or: [{ tag: { $regex: q, $options: "i" }, owner: req.authId }],
       };
-      const tag = await UserTag.find(query).sort({ date: -1 }).limit(10);
+      const tag = await Tag.find(query).sort({ date: -1 }).limit(10);
 
       if (!tag) {
         return res.status(404).send();
@@ -65,7 +63,7 @@ router.get("/user/tag/all", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
 
-    const tag = await UserTag.find({ owner: req.authId });
+    const tag = await Tag.find({ owner: req.authId });
     res.status(200).send(tag);
   } catch (e) {
     res.status(500).send();
@@ -75,7 +73,7 @@ router.get("/user/tag/:id", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
 
-    const tag = await UserTag.find({
+    const tag = await Tag.find({
       _id: req.params.id,
     });
     console.log(tag);
@@ -89,7 +87,9 @@ router.get("/user/tag/:id", checkIfAuthenticated, async (req, res) => {
 router.put("/user/tag", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
-    const tag = await UserTag.findOneAndUpdate(
+    tagCheck(req.body);
+
+    const tag = await Tag.findOneAndUpdate(
       { _id: req.body._id, owner: req.authId },
       req.body,
       {
@@ -110,7 +110,7 @@ router.delete("/user/tag/:id", checkIfAuthenticated, async (req, res) => {
     console.log(req.authId);
     console.log(req.params.id);
 
-    const tag = await UserTag.deleteOne({
+    const tag = await Tag.deleteOne({
       _id: req.params.id,
       owner: req.authId,
     });
@@ -118,7 +118,7 @@ router.delete("/user/tag/:id", checkIfAuthenticated, async (req, res) => {
     console.log(tag);
   } catch (e) {
     console.log(e);
-    res.status(500).send();
+    res.status(500).send(e.message);
   }
 });
 module.exports = router;

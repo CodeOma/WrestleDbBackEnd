@@ -1,28 +1,47 @@
 const express = require("express");
 const router = new express.Router();
-const { UserTakedown } = require("../../db/models/usermodels/usertakedown");
+const { Takedown } = require("../../db/models/takedown");
+const { takedownCheck } = require("../../helpers/errorhandling");
 const { checkIfAuthenticated, checkIfAdmin } = require("../../middleware/auth");
 
 // TAKEDOWN
 
 ////////////PUT (UPDATE/CREATE)//////////////
-router.post("/user/takedown", checkIfAuthenticated, async (req, res) => {
-  try {
-    console.log(req.body);
-    if (
-      req.body.takedown !== "" &&
-      req.body.offdef !== "" &&
-      req.body.position !== "" &&
-      req.body.category !== "" &&
-      req.body.type !== "" &&
-      req.authId
-    ) {
-      const takedown1 = await UserTakedown.findOneAndUpdate(
+router.post(
+  "/user/takedown",
+  checkIfAuthenticated,
+
+  async (req, res) => {
+    try {
+      const { takedown, position, type, offdef } = req.body;
+
+      if (!takedown || !takedown.length) {
+        return res.status(400).json({
+          error: "Takedown is required",
+        });
+      }
+      if (!position || !position.length) {
+        return res.status(400).json({
+          error: "Position is required",
+        });
+      }
+      if (!type || !type.length) {
+        return res.status(400).json({
+          error: "Type is required",
+        });
+      }
+      if (!offdef || !offdef.length) {
+        return res.status(400).json({
+          error: "Category must be selected",
+        });
+      }
+
+      const takedown1 = await Takedown.findOneAndUpdate(
         {
           takedown: req.body.takedown,
           offdef: req.body.offdef,
           position: req.body.position,
-          category: req.body.category,
+          // category: req.body.category,
           type: req.body.type,
           owner: req.authId,
         },
@@ -34,13 +53,11 @@ router.post("/user/takedown", checkIfAuthenticated, async (req, res) => {
       );
       console.log(takedown1);
       res.status(200).send(takedown1);
-    } else {
-      throw new Error("Invalid Wreslter Format");
+    } catch (e) {
+      res.status(500).send(errorHandler(e));
     }
-  } catch (e) {
-    res.status(500).send();
   }
-});
+);
 
 //////////Search Autocomple////
 router.get(
@@ -52,9 +69,7 @@ router.get(
       let query = {
         $or: [{ fullName: { $regex: q, $options: "i" } }],
       };
-      const takedown = await UserTakedown.find(query)
-        .sort({ date: -1 })
-        .limit(10);
+      const takedown = await Takedown.find(query).sort({ date: -1 }).limit(10);
 
       if (!takedown) {
         return res.status(404).send();
@@ -74,7 +89,7 @@ router.get("/user/takedown/all", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
 
-    const takedown = await UserTakedown.find({ owner: req.authId });
+    const takedown = await Takedown.find({ owner: req.authId });
     res.status(200).send(takedown);
   } catch (e) {
     res.status(500).send();
@@ -84,7 +99,7 @@ router.get("/user/takedown/:id", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
 
-    const takedown = await UserTakedown.find({
+    const takedown = await Takedown.find({
       _id: req.params.id,
     });
     console.log(takedown);
@@ -98,46 +113,56 @@ router.get("/user/takedown/:id", checkIfAuthenticated, async (req, res) => {
 router.put("/user/takedown", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
-    console.log(req.authId);
 
-    console.log(req.params);
-    console.log(req.body);
+    const { takedown, position, type, offdef } = req.body;
 
-    const takedown = await UserTakedown.findOneAndUpdate(
+    if (!takedown || !takedown.length) {
+      return res.status(400).json({
+        error: "Takedown is required",
+      });
+    }
+    if (!position || !position.length) {
+      return res.status(400).json({
+        error: "Position is required",
+      });
+    }
+    if (!type || !type.length) {
+      return res.status(400).json({
+        error: "Type is required",
+      });
+    }
+    if (!offdef || !offdef.length) {
+      return res.status(400).json({
+        error: "Category must be selected",
+      });
+    }
+    const takedownUpd = await Takedown.findOneAndUpdate(
       { _id: req.body._id, owner: req.authId },
       req.body,
       {
         new: true,
       }
     );
-    console.log(takedown);
-    res.status(200).send(takedown);
+    res.status(200).send(takedownUpd);
   } catch (e) {
-    console.log(e);
-    res.status(500).send();
+    res.status(500).send(e);
   }
 });
 ////////////DELETE////////////////
-router.delete(
-  "/user/takedown/user/:id",
-  checkIfAuthenticated,
-  async (req, res) => {
-    try {
-      //Validation
-      console.log(req.params);
-      console.log(req.body);
+router.delete("/user/takedown/:id", checkIfAuthenticated, async (req, res) => {
+  try {
+    //Validation
+    console.log("omaklask");
+    console.log(req.params);
+    console.log(req.body);
 
-      const takedown = await UserTakedown.findOneAndDelete(
-        { _id: req.params.id, owner: req.authId },
-        req.body,
-        {
-          new: true,
-        }
-      );
-      console.log(match);
-    } catch (e) {
-      res.status(500).send();
-    }
+    const takedown = await Takedown.deleteOne({
+      _id: req.params.id,
+      owner: req.authId,
+    });
+    res.status(200).send(takedown);
+  } catch (e) {
+    res.status(500).send(e);
   }
-);
+});
 module.exports = router;

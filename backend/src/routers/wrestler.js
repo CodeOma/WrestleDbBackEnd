@@ -47,9 +47,23 @@ router.get("/wrestler/team/:team", async (req, res) => {
 });
 
 ////////////PUT (UPDATE/CREATE)//////////////
-router.put("/wrestler", async (req, res) => {
+router.post("/user/wrestler", checkIfAuthenticated, async (req, res) => {
   try {
-    console.log(req.body);
+    if (!req.body.fullName || !req.body.fullName.length) {
+      return res.status(400).json({
+        error: "Full Name is required",
+      });
+    }
+    if (!req.body.lastName || !req.body.lastName.length) {
+      return res.status(400).json({
+        error: "Last Name is required",
+      });
+    }
+    if (!req.body.team || !req.body.team.length) {
+      return res.status(400).json({
+        error: "Team is required",
+      });
+    }
     if (
       req.body.fullName !== "" &&
       req.body.lastName !== "" &&
@@ -60,6 +74,7 @@ router.put("/wrestler", async (req, res) => {
           fullName: req.body.fullName,
           lastName: req.body.lastName,
           team: req.body.team,
+          owner: req.authId,
         },
         {},
         { upsert: true, new: true, setDefaultsOnInsert: true },
@@ -67,15 +82,44 @@ router.put("/wrestler", async (req, res) => {
           if (error) console.log(error);
         }
       );
-      console.log(wrestler1);
-    } else {
-      throw new Error("Invalid Wreslter Format");
+      res.status(200).send(wrestler1);
     }
+    // else {
+    //   throw new Error("Invalid Wreslter Format");
+    // }
   } catch (e) {
+    console.log("yeeeeeet", errorHandler(e));
     res.status(500).send();
   }
 });
 
+//////////Search Autocomple////
+router.get(
+  "/user/autosearch/wrestler/:key",
+  checkIfAuthenticated,
+  async (req, res) => {
+    try {
+      let q = req.params.key;
+      let query = {
+        $and: [
+          { $or: [{ fullName: { $regex: q, $options: "i" } }] },
+          { owner: req.authId },
+        ],
+      };
+      const wrestler = await Wrestler.find(query).sort({ date: -1 }).limit(10);
+
+      if (!wrestler) {
+        return res.status(404).send();
+      }
+      const array = await wrestler.map(wres => {
+        return { title: wres.fullName, id: wres._id };
+      });
+      res.send(array);
+    } catch (error) {
+      res.status(500).send;
+    }
+  }
+);
 //////////Search Autocomple////
 router.get("/autosearch/wrestler/:key", async (req, res) => {
   try {
@@ -98,74 +142,76 @@ router.get("/autosearch/wrestler/:key", async (req, res) => {
 });
 
 ////////////Get ALL FOR CREATOR//////////////
-router.get("/wrestler/all", checkIfAuthenticated, async (req, res) => {
+router.get("/user/wrestler/all", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
-    console.log(req.authId);
-
-    console.log(req.params);
-    console.log(req.body);
-
-    const wrestler = await Wrestler.find(
-      { _id: req.params.id, owner: req.authId },
-      req.body,
-      {
-        new: true,
-      }
-    );
-    console.log(match);
+    const wrestler = await Wrestler.find({ owner: req.authId });
+    res.status(200).send(wrestler);
   } catch (e) {
-    res.status(500).send();
+    console.log("ERROR", e.message);
+    res.status(500).send(e.message);
   }
 });
+
 /////////////UPDATE///////////////
-router.put("/wrestler/:id", checkIfAuthenticated, async (req, res) => {
+
+router.put("/user/wrestler", checkIfAuthenticated, async (req, res) => {
   try {
-    //Validation
-    console.log(req.authId);
-
-    console.log(req.params);
-    console.log(req.body);
-
+    if (!req.body.fullName || !req.body.fullName.length) {
+      return res.status(400).json({
+        error: "Full Name is required",
+      });
+    }
+    if (!req.body.lastName || !req.body.lastName.length) {
+      return res.status(400).json({
+        error: "Last Name is required",
+      });
+    }
+    if (!req.body.team || !req.body.team.length) {
+      return res.status(400).json({
+        error: "Team is required",
+      });
+    }
     const wrestler = await Wrestler.findOneAndUpdate(
-      { _id: req.params.id, owner: req.authId },
+      { _id: req.body._id, owner: req.authId },
       req.body,
       {
         new: true,
       }
     );
-    console.log(match);
+    res.status(200).send(wrestler);
+  } catch (e) {
+    res.status(500).send(e);
+  }
+});
+router.get("/user/wrestler/:id", checkIfAuthenticated, async (req, res) => {
+  try {
+    const wrestler = await Wrestler.find({
+      _id: req.params.id,
+      owner: req.authId,
+    });
+    console.log(wrestler);
+    res.status(200).send(wrestler);
   } catch (e) {
     res.status(500).send();
   }
 });
+
 ////////////DELETE////////////////
-router.delete("/wrestler/:id", checkIfAuthenticated, async (req, res) => {
+
+router.delete("/user/wrestler/:id", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
     console.log(req.params);
     console.log(req.body);
 
-    const wrestler = await Wrestler.findOneAndDelete(
-      { _id: req.params.id, owner: req.authId },
-      req.body,
-      {
-        new: true,
-      }
-    );
-    console.log(match);
+    const wrestler = await Wrestler.deleteOne({
+      _id: req.params.id,
+      owner: req.authId,
+    });
+    res.status(200).send(wrestler);
   } catch (e) {
     res.status(500).send();
   }
 });
 module.exports = router;
-
-///////Create////////
-// router.post("/wrestler", async (req, res) => {
-//   try {
-//     await task.save();
-//     res.status(201).send(task);
-//   } catch (e) {
-//     res.status(400).send(e);
-//   }
-// });

@@ -17,6 +17,7 @@ router.get("/techniques/all", checkIfAuthenticated, async (req, res) => {
     // const techniques = await allTechniques();
     res.status(200).send(techniques);
   } catch (e) {
+    console.log("errorrrr");
     res.status(400).send();
   }
 });

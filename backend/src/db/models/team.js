@@ -9,12 +9,13 @@ const teamSchema = mongoose.Schema({
     data: Buffer,
     contentType: String,
   },
-});
-
-teamSchema.virtual("wrestlers", {
-  ref: "Wrestler",
-  localField: "teamName",
-  foreignField: "team",
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+  },
+  private: {
+    type: Boolean,
+  },
 });
 
 const Team = mongoose.model("Team", teamSchema);

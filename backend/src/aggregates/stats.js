@@ -4,16 +4,6 @@ const mongoose = require("mongoose");
 const generalStats = async (id, sortParameter, direction) => {
   const doc = await Wrestler.aggregate([
     {
-      $project: {
-        _id: {
-          $toString: "$_id",
-        },
-        fullName: 1,
-        lastName: 1,
-        team: 1,
-      },
-    },
-    {
       $lookup: {
         from: "matches",
         localField: "_id",
@@ -59,14 +49,6 @@ const generalStats = async (id, sortParameter, direction) => {
       $unwind: {
         path: "$matches",
         preserveNullAndEmptyArrays: false,
-      },
-    },
-    {
-      $lookup: {
-        from: "tournaments",
-        localField: "matches.tournament",
-        foreignField: "_id",
-        as: "tournament",
       },
     },
     {
@@ -601,16 +583,6 @@ const individualProfileStats = async id => {
         },
       },
       {
-        $project: {
-          _id: {
-            $toString: "$_id",
-          },
-          fullName: 1,
-          lastName: 1,
-          team: 1,
-        },
-      },
-      {
         $lookup: {
           from: "matches",
           localField: "_id",
@@ -659,17 +631,27 @@ const individualProfileStats = async id => {
         },
       },
       {
-        $lookup: {
-          from: "tournaments",
-          localField: "matches.tournament",
-          foreignField: "_id",
-          as: "tournament",
-        },
-      },
-      {
         $project: {
           fullName: 1,
-          tournamentName: "$tournament.name",
+          tournamentName: "$matches.tournament.tournamentName",
+          totalScored: {
+            $cond: [
+              {
+                $eq: ["$matches.redWrestler.fullName", "$fullName"],
+              },
+              "$matches.result.redTotalScore",
+              "$matches.result.blueTotalScore",
+            ],
+          },
+          oppTotalScored: {
+            $cond: [
+              {
+                $ne: ["$matches.redWrestler.fullName", "$fullName"],
+              },
+              "$matches.result.redTotalScore",
+              "$matches.result.blueTotalScore",
+            ],
+          },
           result: {
             $cond: [
               {
@@ -763,42 +745,6 @@ const individualProfileStats = async id => {
         },
       },
       {
-        $unwind: {
-          path: "$wins",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $unwind: {
-          path: "$losses",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $unwind: {
-          path: "$oppScores",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      {
-        $unwind: {
-          path: "$tournamentName",
-        },
-      },
-      {
-        $addFields: {
-          totalScored: {
-            $cond: [
-              {
-                $eq: ["$result", "winner"],
-              },
-              "$wins.total",
-              "$losses.total",
-            ],
-          },
-        },
-      },
-      {
         $project: {
           fullName: 1,
           match: {
@@ -810,6 +756,7 @@ const individualProfileStats = async id => {
             lossOpponent: "$lossOpponent",
             winOpponent: "$winOpponent",
             totalScored: "$totalScored",
+            oppTotalScored: "$oppTotalScored",
             oppScores: "$oppScores",
             url: "$url",
           },
@@ -818,16 +765,16 @@ const individualProfileStats = async id => {
       {
         $addFields: {
           firstScore: {
-            $arrayElemAt: ["$match.pointsScored.totalScores", 0],
+            $arrayElemAt: ["$match.pointsScored", 0],
           },
           oppFirstScore: {
-            $arrayElemAt: ["$match.oppScores.totalScores", 0],
+            $arrayElemAt: ["$match.oppScores", 0],
           },
           lastScore: {
-            $arrayElemAt: ["$match.pointsScored.totalScores", -1],
+            $arrayElemAt: ["$match.pointsScored", -1],
           },
           oppLastScore: {
-            $arrayElemAt: ["$match.oppScores.totalScores", -1],
+            $arrayElemAt: ["$match.oppScores", -1],
           },
         },
       },
@@ -841,6 +788,7 @@ const individualProfileStats = async id => {
             lossOpponent: "$match.lossOpponent",
             winOpponent: "$match.winOpponent",
             totalScored: "$match.totalScored",
+            oppTotalScored: "$match.oppTotalScored",
             oppScores: "$match.oppScores",
             scoresFirst: {
               $cond: [
@@ -992,7 +940,7 @@ const individualProfileStats = async id => {
             $sum: "$matches.totalScored",
           },
           totalPC: {
-            $sum: "$matches.oppScores.total",
+            $sum: "$matches.oppTotalScored",
           },
           avgPSPM: {
             $trunc: [
@@ -1005,7 +953,7 @@ const individualProfileStats = async id => {
           avgPCPM: {
             $trunc: [
               {
-                $avg: "$matches.oppScores.total",
+                $avg: "$matches.oppTotalScored",
               },
               0,
             ],

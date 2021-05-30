@@ -1,7 +1,15 @@
 const mongoose = require("mongoose");
-
+const { timestampSchema, Timestamp } = require("./takedown");
 const matchSchema = mongoose.Schema({
-  tournament: { type: mongoose.Schema.Types.ObjectId, ref: "Tournament" },
+  tournament: {
+    tournamentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Tournament",
+      required: true,
+    },
+    tournamentName: { type: String, required: true },
+    tournamentType: { type: String, required: true },
+  },
   style: {
     type: String,
     required: true,
@@ -17,24 +25,41 @@ const matchSchema = mongoose.Schema({
   result: {},
   redWrestler: {
     id: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
+    fullName: { type: String, required: true },
 
     team: { type: String, required: true },
   },
   blueWrestler: {
     id: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
+    fullName: { type: String, required: true },
 
     team: { type: String, required: true },
   },
 
-  url: {},
+  url: {
+    type: String,
+    // required: true,
+  },
 
   scores: [],
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "User",
+  },
+  private: {
+    type: Boolean,
+  },
+  organization: {
+    type: String,
+    required: true,
+  },
 });
 
 const Match = mongoose.model("Match", matchSchema);

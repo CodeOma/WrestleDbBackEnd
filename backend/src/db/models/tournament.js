@@ -11,15 +11,13 @@ const tournamentSchema = mongoose.Schema({
     type: Number,
     required: true,
   },
-  month: {
-    type: String,
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
   },
-});
-
-tournamentSchema.virtual("matches", {
-  ref: "Match",
-  localField: "_id",
-  foreignField: "tournament",
+  private: {
+    type: Boolean,
+  },
 });
 
 const Tournament = mongoose.model("Tournament", tournamentSchema);

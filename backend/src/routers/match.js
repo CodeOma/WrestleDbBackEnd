@@ -18,99 +18,138 @@ const {
 
 const { checkIfAuthenticated, checkIfAdmin } = require("../middleware/auth");
 const Wrestler = require("../db/models/wrestler");
-
-// router.post("/tasks", auth, async (req, res) => {
-// //   const task = new Task({ ...req.body, creator: req.user._id });
-
-//   try {
-//     await task.save();
-//     res.status(201).send(task);
-//   } catch (e) {
-//     res.status(400).send(e);
-//   }
-// });
-
-////BY WEIGHTCLASS///
-
-router.get("/match/weightclass/:weightclass", async (req, res) => {
-  try {
-    const match = await Match.find({ weightClass: req.params.weightclass });
-    res.status(200).send(match);
-  } catch (e) {
-    res.status(400).send();
-  }
-});
-
-////BY ROUND///
-router.get("/match/round/:round", async (req, res) => {
-  try {
-    console.log(req.params.round);
-    const roundfunc = () => {
-      if (req.params.round === "round16") {
-        return "1/16 Final";
-      }
-      if (req.params.round === "round8") {
-        return "1/8 Final";
-      }
-      if (req.params.round === "round4") {
-        return "1/4 Final";
-      }
-      if (req.params.round === "round2") {
-        return "1/2 Final";
-      }
-      if (req.params.round === "final") {
-        return "Final 1-2";
-      }
-      if (req.params.round === "repechage") {
-        return "Repechage";
-      }
-      if (req.params.round === "final3") {
-        return "Final 3-5";
-      }
-      if (req.params.round === "Qualif") {
-        return "Qualif";
-      }
-    };
-    const round = roundfunc(req.params.round);
-    console.log(round);
-    const match = await Match.find({ round });
-    res.status(200).send(match);
-  } catch (e) {
-    res.status(400).send();
-  }
-});
+const Tournament = require("../db/models/tournament");
 
 /////BY WRESTLER ID (LIST for editing)////////
 
-router.get("/match/wrestler/list/:id", async (req, res) => {
-  try {
-    const wrestler = await Match.find({
-      $or: [
-        { "redWrestler.id": req.params.id },
-        { "blueWrestler.id": req.params.id },
-      ],
-    });
-    res.status(200).send(wrestler);
-  } catch (e) {
-    res.status(400).send();
+router.get(
+  "/user/match/wrestler/list/:id",
+  checkIfAuthenticated,
+  async (req, res) => {
+    try {
+      console.log(req.authId);
+      const wrestler = await Match.find({
+        $and: [
+          {
+            $or: [
+              { "redWrestler.id": req.params.id },
+              { "blueWrestler.id": req.params.id },
+            ],
+          },
+          { owner: req.authId },
+        ],
+      });
+      res.status(200).send(wrestler);
+    } catch (e) {
+      res.status(400).send();
+    }
   }
-});
+);
 ////BY WRESTLER///////
+router.get(
+  "/user/match/wrestler/:id",
+  checkIfAuthenticated,
+  async (req, res) => {
+    try {
+      console.log("snkadnkan");
+      console.log(req);
+      if (req.query.filters) {
+        const filter = req.query.filters;
+        const wrestler = await wrestlerMatches(
+          req.params.id,
+          filter,
+          skip,
+
+          req.authId
+        );
+        res.status(200).send(wrestler);
+      } else {
+        const wrestler = await wrestlerMatches(req.params.id);
+        res.status(200).send(wrestler);
+      }
+      console.log(req.query.filters);
+    } catch (e) {
+      res.status(400).send();
+    }
+  }
+);
+//no auth version
 router.get("/match/wrestler/:id", async (req, res) => {
   try {
+    console.log(req.query.skip);
     if (req.query.filters) {
       const filter = req.query.filters;
-      const wrestler = await wrestlerMatches(req.params.id, filter);
-      console.log(wrestler);
+      const skip = req.query.skip;
+
+      const wrestler = await wrestlerMatches(req.params.id, filter, skip);
       res.status(200).send(wrestler);
     } else {
       const wrestler = await wrestlerMatches(req.params.id);
       res.status(200).send(wrestler);
     }
   } catch (e) {
-    res.status(400).send();
+    console.log(e);
+    res.status(400).send(e);
   }
 });
+////////////Get ALL FOR CREATOR//////////////
+router.get("/user/match/all", checkIfAuthenticated, async (req, res) => {
+  try {
+    //Validation
+
+    const match = await Match.find({});
+    res.status(200).send(match);
+  } catch (e) {
+    console.log(e);
+    res.status(500).send(e);
+  }
+});
+
+///Specific Match BY ID////
+router.get("/user/match/:id", checkIfAuthenticated, async (req, res) => {
+  try {
+    const match = await Match.findOne({
+      _id: req.params.id,
+      owner: req.authId,
+    });
+    if (!match) {
+      return res.status(404).send();
+    }
+    res.send(match);
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
+///////////Search Autocomplete//////////
+router.get(
+  "/user/autosearch/match/:key",
+  checkIfAuthenticated,
+  async (req, res) => {
+    try {
+      let q = req.params.key;
+      let query = {
+        $and: [
+          {
+            $or: [
+              { "redWrestler.fullName": { $regex: q, $options: "i" } },
+              { "blueWrestler.fullName": { $regex: q, $options: "i" } },
+            ],
+          },
+          { owner: req.authId },
+        ],
+      };
+      const matches = await Match.find(query).sort({ date: -1 }).limit(10);
+      if (!matches) {
+        return res.status(404).send();
+      }
+      console.log("searched");
+      res.send(matches);
+    } catch (error) {
+      res.status(500).send;
+    }
+  }
+);
 
 ///Specific Match BY ID////
 router.get("/match/:id", async (req, res) => {
@@ -149,32 +188,144 @@ router.get("/autosearch/match/:key", async (req, res) => {
 });
 
 /////////PUT(Update/Create)///////////
-router.put("/match/:id", checkIfAuthenticated, async (req, res) => {
+router.put("/user/match", checkIfAuthenticated, async (req, res) => {
+  try {
+    if (
+      !req.body.tournament.tournamentId ||
+      !req.body.tournament.tournamentId.length
+    ) {
+      return res.status(400).json({
+        error: "Tournament is required",
+      });
+    }
+    // if (!req.body.style || !req.body.style.length) {
+    //   return res.status(400).json({
+    //     error: "Style is required",
+    //   });
+    // }
+    if (!req.body.weightClass || !req.body.weightClass.length) {
+      return res.status(400).json({
+        error: "Weight Class is required",
+      });
+    }
+    if (!req.body.round || !req.body.round.length) {
+      return res.status(400).json({
+        error: "Round is required",
+      });
+    }
+    if (!req.body.result.victoryType || !req.body.result.victoryType.length) {
+      return res.status(400).json({
+        error: "Victory Type is required",
+      });
+    }
+    if (!req.body.result.winner || !req.body.result.winner.length) {
+      return res.status(400).json({
+        error: "Winner is required",
+      });
+    }
+    if (!req.body.result.loser || !req.body.result.loser.length) {
+      return res.status(400).json({
+        error: "Loser is required",
+      });
+    }
+    // if (!result.winnerPoints || !result.winnerPoints.length) {
+    //   return res.status(400).json({
+    //     error: "Winneis required",
+    //   });
+    // }
+    // if (!result.loserPoints || !result.loserPoints.length) {
+    //   return res.status(400).json({
+    //     error: "Position is required",
+    //   });
+    // }
+    // if (req.body.result.redTotalPoints  ) {
+    //   return res.status(400).json({
+    //     error: "Red Total is required",
+    //   });
+    // }
+    // if (!req.body.result.blueTotalPoints.length) {
+    //   return res.status(400).json({
+    //     error: "Blue Total Points is required",
+    //   });
+    // }
+
+    if (!req.body.redWrestler.id || !req.body.redWrestler.id.length) {
+      return res.status(400).json({
+        error: "Position is required",
+      });
+    }
+
+    if (!req.body.blueWrestler.id || !req.body.blueWrestler.id.length) {
+      return res.status(400).json({
+        error: "Blue Wrestler is required",
+      });
+    }
+
+    if (!req.body.url || !req.body.url.length) {
+      return res.status(400).json({
+        error: "Match Url is required",
+      });
+    }
+    const tournament = await Tournament.findOne({
+      _id: req.body.tournament.tournamentId,
+    });
+    console.log({
+      ...req.body,
+      tournament: {
+        tournamentName: tournament.name,
+        tournamentId: tournament._id,
+        tournamentType: tournament.type,
+      },
+      owner: req.authId,
+      style: "Freestyle",
+      organization: "United World Wrestling",
+    });
+    const match = await Match.create({
+      ...req.body,
+      tournament: {
+        tournamentName: tournament.name,
+        tournamentId: tournament._id,
+        tournamentType: tournament.type,
+      },
+      owner: req.authId,
+      style: "Freestyle",
+      organization: "United World Wrestling",
+    });
+    res.status(200).send(match);
+  } catch (e) {
+    console.log(e);
+    res.status(500).send(e);
+  }
+});
+router.put("/user/match/:id", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
     console.log(req.params);
     console.log(req.body);
 
-    const match = await Match.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    console.log(match);
-  } catch (e) {
-    res.status(500).send();
+    const match = await Match.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body, owner: req.authId },
+      {
+        new: true,
+      }
+    );
+res.send(200).send(match)  } catch (e) {
+    res.status(500).send(e);
   }
 });
 
 ////////////DELETE////////////////
-router.put("/match/:id", checkIfAuthenticated, async (req, res) => {
+router.delete("/user/match/:id", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
     console.log(req.params);
     console.log(req.body);
 
-    const match = await Match.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    console.log(match);
+    // const match = await Match.findByIdAndDelete(req.params.id, req.body, {
+    //   new: true,
+    // });
+    // console.log(match);
   } catch (e) {
     res.status(500).send();
   }

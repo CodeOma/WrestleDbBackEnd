@@ -18,11 +18,9 @@ const checkIfAuthenticated = (req, res, next) => {
       const { authToken } = req;
       const userInfo = await admin.auth().verifyIdToken(authToken);
       const fetchUser = await User.findOne({ userId: userInfo.uid });
-
       req.authId = fetchUser._id;
       return next();
     } catch (e) {
-      console.log(e);
       return res
         .status(401)
         .send({ error: "You are not authorized to make this request" });

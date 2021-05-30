@@ -1,6 +1,6 @@
 const express = require("express");
 const router = new express.Router();
-const { UserType } = require("../../db/models/usermodels/usertakedown");
+const { Type } = require("../../db/models/takedown");
 const { checkIfAuthenticated, checkIfAdmin } = require("../../middleware/auth");
 
 // TAKEDOWN
@@ -8,12 +8,19 @@ const { checkIfAuthenticated, checkIfAdmin } = require("../../middleware/auth");
 ////////////PUT (UPDATE/CREATE)//////////////
 router.post("/user/type", checkIfAuthenticated, async (req, res) => {
   try {
-    console.log(req.body, "yeet");
-    // console.log(req.body.type);
-    // console.log(req.body._id);
-
-    if (req.body.type !== "" && req.authId) {
-      const type1 = await UserType.findOneAndUpdate(
+    console.log(req.body);
+    if (!req.body.type || !req.body.type.length) {
+      return res.status(400).json({
+        error: "Type is required",
+      });
+    }
+    if (!req.body.position || !req.body.position.length) {
+      return res.status(400).json({
+        error: "Position is required",
+      });
+    }
+    if (req.body.type !== "" && req.body.position !== "" && req.authId) {
+      const type1 = await Type.findOneAndUpdate(
         {
           type: req.body.type,
           owner: req.authId,
@@ -31,7 +38,8 @@ router.post("/user/type", checkIfAuthenticated, async (req, res) => {
     }
   } catch (e) {
     console.log(e);
-    res.status(500).send();
+
+    res.status(500).send(e);
   }
 });
 
@@ -45,7 +53,7 @@ router.get(
       let query = {
         $or: [{ type: { $regex: q, $options: "i" }, owner: req.authId }],
       };
-      const type = await UserType.find(query).sort({ date: -1 }).limit(10);
+      const type = await Type.find(query).sort({ date: -1 }).limit(10);
 
       if (!type) {
         return res.status(404).send();
@@ -65,7 +73,7 @@ router.get("/user/type/all", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
 
-    const type = await UserType.find({ owner: req.authId });
+    const type = await Type.find({ owner: req.authId });
     res.status(200).send(type);
   } catch (e) {
     res.status(500).send();
@@ -75,7 +83,7 @@ router.get("/user/type/all", checkIfAuthenticated, async (req, res) => {
 router.put("/user/type", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
-    const type = await UserType.findOneAndUpdate(
+    const type = await Type.findOneAndUpdate(
       { _id: req.body._id, owner: req.authId },
       req.body,
       {
@@ -96,7 +104,7 @@ router.delete("/user/type/:id", checkIfAuthenticated, async (req, res) => {
     console.log(req.authId);
     console.log(req.params.id);
 
-    const type = await UserType.deleteOne({
+    const type = await Type.deleteOne({
       _id: req.params.id,
       owner: req.authId,
     });

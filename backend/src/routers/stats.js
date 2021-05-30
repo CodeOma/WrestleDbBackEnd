@@ -72,7 +72,7 @@ router.get("/stats/wrestler/:id", async (req, res) => {
     res.send([stats, takedownsGiven, takedownsScored, countered, scoreTypes]);
   } catch (e) {
     console.log(e);
-    res.status(400).send();
+    res.status(400).send(e);
   }
 });
 

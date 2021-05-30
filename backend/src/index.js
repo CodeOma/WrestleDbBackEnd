@@ -2,36 +2,27 @@ const express = require("express");
 require("./auth/firebase");
 require("./db/mongoose.js");
 
+require("./management/turnOldtoId.js");
 ///
 const Wrestler = require("./db/models/wrestler");
 const Match = require("./db/models/match");
-const { correctDups } = require("./management/management");
-// const { fixMatches } = require("./management/fix");
+// const { correctDups } = require("./management/management");
+// require("./management/management");
 const userRouter = require("./routers/user");
 const matchRouter = require("./routers/match");
-
 //takedowns//
 const takedownRouter = require("./routers/takedowns/takedowns");
 const typeRouter = require("./routers/takedowns/type");
 const tagRouter = require("./routers/takedowns/tag");
 const positionRouter = require("./routers/takedowns/position");
-const categoryRouter = require("./routers/takedowns/category");
-
+// const categoryRouter = require("./routers/takedowns/category");
+// fixMatches();
 //Public Data//
 const wrestlerRouter = require("./routers/wrestler");
 const teamRouter = require("./routers/team");
 const tournamentRouter = require("./routers/tournament");
 const statsRouter = require("./routers/stats");
 const techniqueRouter = require("./routers/techniques");
-
-///User Data////
-const userMatchRouter = require("./routers/userManagement/match");
-const userWrestlerRouter = require("./routers/userManagement/wrestler");
-const userTeamRouter = require("./routers/userManagement/team");
-const userTournamentRouter = require("./routers/userManagement/tournament");
-const userStatsRouter = require("./routers/userManagement/stats");
-const userTechniqueRouter = require("./routers/userManagement/techniques");
-
 //End User Management///
 const cors = require("cors");
 const app = express();
@@ -63,18 +54,12 @@ app.use(takedownRouter);
 app.use(typeRouter);
 app.use(tagRouter);
 app.use(positionRouter);
-app.use(categoryRouter);
-
-app.use(userMatchRouter);
-app.use(userWrestlerRouter);
-app.use(userTeamRouter);
-app.use(userTournamentRouter);
-app.use(userStatsRouter);
-app.use(userTechniqueRouter);
+// app.use(categoryRouter);
 
 // correctDups();
 
 const port = process.env.PORT || 5000;
+
 
 app.listen(port, () => {
   console.log(`listening on ${port}`);

@@ -27,7 +27,6 @@ const allTechniques = async (id, filters, skip) => {
         },
       };
     }
-    console.log(filters);
     console.log(convertFilters(filters));
     const doc = await Match.aggregate([
       {
@@ -52,7 +51,7 @@ const allTechniques = async (id, filters, skip) => {
           opponent: {
             $cond: [
               {
-                $eq: ["$redWrestler.fullName", "$scores.name"],
+                $eq: ["$redWrestler.fullName", "$scores.fullName"],
               },
               "$blueWrestler.fullName",
               "$redWrestler.fullName",
@@ -61,7 +60,7 @@ const allTechniques = async (id, filters, skip) => {
           wrestler: {
             $cond: [
               {
-                $eq: ["$redWrestler.fullName", "$scores.name"],
+                $eq: ["$redWrestler.fullName", "$scores.fullName"],
               },
               "$redWrestler.fullName",
               "$blueWrestler.fullName",

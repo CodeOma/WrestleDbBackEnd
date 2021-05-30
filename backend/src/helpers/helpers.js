@@ -104,12 +104,14 @@ const createTechFilterOptions = async doc => {
     const docs = await doc;
     if (docs) {
       const map = docs.forEach(td => {
+        console.log(td);
         weightClass.add(td.weightClass);
         offDefTech.add(td.offdef);
         position.add(td.position);
         round.add(td.round);
         type.add(td.type);
         setup.add(...td.setup);
+
         points.add(td.points);
         wrestler.add(td.wrestler);
         takedown.add(td.takedown);
@@ -129,7 +131,7 @@ const createTechFilterOptions = async doc => {
     };
     return filters;
   } catch (e) {
-    console.log(e);
+    console.log("the error", e);
   }
 };
 

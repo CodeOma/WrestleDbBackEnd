@@ -1,21 +1,60 @@
 const mongoose = require("mongoose");
 const timestampSchema = mongoose.Schema({
-  id: "",
-  round: "",
-  wrestlerId: "",
-  oppDefendedShot: "",
-  type: "",
-  setup: [],
-  details: "",
-  videoTime: 0,
-  time: 0,
-  points: 0,
-});
-const takedownSchema = mongoose.Schema({
-  category: {
-    type: String,
+  // id: "",
+  round: {
+    type: Number,
     required: true,
   },
+  wrestlerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+  },
+  fullName: {
+    type: String,
+    // required: true,
+  },
+  oppDefendedShot: {
+    type: String,
+    // required: true,
+  },
+  takedown: {
+    type: String,
+  },
+  setup: [],
+  details: {
+    type: String,
+  },
+  videoTime: {
+    type: Number,
+    // required: true,
+  },
+  time: {
+    type: Number,
+    required: true,
+  },
+  points: {
+    type: Number,
+    required: true,
+  },
+
+  takedown: {
+    type: String,
+    // required: true,
+  },
+  position: {
+    type: String,
+    // required: true,
+  },
+  type: {
+    type: String,
+    // required: true,
+  },
+  offdef: {
+    type: String,
+    // required: true
+  },
+});
+const takedownSchema = mongoose.Schema({
   takedown: {
     type: String,
     required: true,
@@ -30,11 +69,7 @@ const takedownSchema = mongoose.Schema({
     required: true,
     // enum: ["admin", "user", "course"],
   },
-  offdef: {
-    type: String,
-    required: true,
-    enum: ["offensive", "defensive", "other"],
-  },
+  offdef: { type: String, required: true },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
@@ -56,6 +91,11 @@ const tagSchema = mongoose.Schema({
 
 const typeSchema = mongoose.Schema({
   type: { type: String, required: true },
+  position: {
+    type: String,
+    required: true,
+    // enum: ["admin", "user", "course"],
+  },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
@@ -70,17 +110,7 @@ const positionSchema = mongoose.Schema({
     ref: "User",
   },
 });
-const pointsSchema = mongoose.Schema({
-  points: {
-    type: String,
-    required: true,
-  },
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref: "User",
-  },
-});
+
 const categorySchema = mongoose.Schema({
   category: {
     type: String,
@@ -98,5 +128,14 @@ const Position = mongoose.model("Position", positionSchema);
 const Tag = mongoose.model("Tag", tagSchema);
 const Type = mongoose.model("Type", typeSchema);
 const Category = mongoose.model("Category", categorySchema);
+const Timestamp = mongoose.model("Timestamp", timestampSchema);
 
-module.exports = { Takedown, Position, Tag, Type, Category };
+module.exports = {
+  timestampSchema,
+  Takedown,
+  Position,
+  Tag,
+  Type,
+  Category,
+  Timestamp,
+};

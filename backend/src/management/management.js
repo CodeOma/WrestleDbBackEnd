@@ -46,63 +46,63 @@ const Match = require("../db/models/match");
 //         },
 //       },
 //     ]);
-const fixMatches = async () => {
-  try {
-    const matches = await Match.find({});
-    console.log(Match);
+// const fixMatches = async () => {
+//   try {
+//     const matches = await Match.find({});
+//     console.log(Match);
 
-    const fix = await matches.forEach(async match => {
-      try {
-        const fixed1 = await match.scores.map(wrestler => {
-          try {
-            if (wrestler.color === "red") {
-              if (match.redWrestler.fullName !== wrestler.fullName) {
-                const fix = wrestler.totalScores.map(score => {
-                  return { ...score, name: match.redWrestler.fullName };
-                });
-                console.log(fix);
-                return {
-                  fullName: match.redWrestler.fullName,
-                  color: "red",
-                  totalScores: fix,
-                  total: wrestler.total,
-                };
-              } else {
-                return wrestler;
-              }
-            }
-            if (wrestler.color === "blue") {
-              if (match.blueWrestler.fullName !== wrestler.fullName) {
-                const fix = wrestler.totalScores.map(score => {
-                  return { ...score, name: match.blueWrestler.fullName };
-                });
-                return {
-                  fullName: match.blueWrestler.fullName,
-                  color: "blue",
-                  totalScores: fix,
-                  total: wrestler.total,
-                };
-              } else {
-                return wrestler;
-              }
-            }
-          } catch (e) {
-            console.log(e);
-          }
-        });
-        const update = await Match.findByIdAndUpdate(
-          { _id: match._id },
-          { scores: fixed1 }
-        );
-        console.log(update);
-      } catch (error) {
-        console.log(error);
-      }
-    });
-  } catch (e) {
-    console.log(e);
-  }
-};
+//     const fix = await matches.forEach(async match => {
+//       try {
+//         const fixed1 = await match.scores.map(wrestler => {
+//           try {
+//             if (wrestler.color === "red") {
+//               if (match.redWrestler.fullName !== wrestler.fullName) {
+//                 const fix = wrestler.totalScores.map(score => {
+//                   return { ...score, name: match.redWrestler.fullName };
+//                 });
+//                 console.log(fix);
+//                 return {
+//                   fullName: match.redWrestler.fullName,
+//                   color: "red",
+//                   totalScores: fix,
+//                   total: wrestler.total,
+//                 };
+//               } else {
+//                 return wrestler;
+//               }
+//             }
+//             if (wrestler.color === "blue") {
+//               if (match.blueWrestler.fullName !== wrestler.fullName) {
+//                 const fix = wrestler.totalScores.map(score => {
+//                   return { ...score, name: match.blueWrestler.fullName };
+//                 });
+//                 return {
+//                   fullName: match.blueWrestler.fullName,
+//                   color: "blue",
+//                   totalScores: fix,
+//                   total: wrestler.total,
+//                 };
+//               } else {
+//                 return wrestler;
+//               }
+//             }
+//           } catch (e) {
+//             console.log(e);
+//           }
+//         });
+//         const update = await Match.findByIdAndUpdate(
+//           { _id: match._id },
+//           { scores: fixed1 }
+//         );
+//         console.log(update);
+//       } catch (error) {
+//         console.log(error);
+//       }
+//     });
+//   } catch (e) {
+//     console.log(e);
+//   }
+// };
 
 // fixMatches();
 
@@ -283,3 +283,17 @@ const fixMatches = async () => {
 // //       }
 // //     }
 // //   ]
+
+// const fixMatches = async () => {
+//   try {
+//     console.log("dasd");
+//     const check = await Match.updateMany(
+//       { owner: "60abd80102509f797c51ca09" },
+//       { owner: "60a2a5803bb95bbc1c18b767" }
+//     );
+//     console.log(check);
+//   } catch (e) {
+//     console.log(e);
+//   }
+// };
+// fixMatches();
