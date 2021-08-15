@@ -46,7 +46,12 @@ router.get(
     try {
       let q = req.params.key;
       let query = {
-        $or: [{ position: { $regex: q, $options: "i" }, owner: req.authId }],
+        $or: [
+          {
+            position: { $regex: q, $options: "i" },
+            $or: [{ owner: req.authId }, { owner: "60a2a5803bb95bbc1c18b767" }],
+          },
+        ],
       };
       const position = await Position.find(query).sort({ date: -1 }).limit(10);
 
@@ -69,7 +74,10 @@ router.get("/user/position/all", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
 
-    const position = await Position.find({ owner: req.authId });
+    const position = await Position.find({
+      $or: [{ owner: req.authId }, { owner: "60a2a5803bb95bbc1c18b767" }],
+    });
+    console.log(position);
     res.status(200).send(position);
   } catch (e) {
     res.status(500).send();
@@ -106,7 +114,7 @@ router.delete("/user/position/:id", checkIfAuthenticated, async (req, res) => {
     });
   } catch (e) {
     console.log(e);
-    res.status(500).send("Unable to");
+    res.status(500).send(e);
   }
 });
 module.exports = router;

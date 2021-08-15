@@ -80,6 +80,7 @@ const teamMatches = async (id, filters, skip) => {
       {
         $match: {
           _id: mongoose.Types.ObjectId(id),
+          private: false,
         },
       },
       {

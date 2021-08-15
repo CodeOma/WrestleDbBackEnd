@@ -63,7 +63,9 @@ router.get("/user/tag/all", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
 
-    const tag = await Tag.find({ owner: req.authId });
+    const tag = await Tag.find({
+      $or: [{ owner: req.authId }, { owner: "60a2a5803bb95bbc1c18b767" }],
+    });
     res.status(200).send(tag);
   } catch (e) {
     res.status(500).send();

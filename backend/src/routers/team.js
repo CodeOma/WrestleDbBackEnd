@@ -116,7 +116,9 @@ router.get("/user/team/all", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
 
-    const team = await Team.find({ owner: req.authId });
+    const team = await Team.find({
+      $or: [{ owner: req.authId }, { owner: "60a2a5803bb95bbc1c18b767" }],
+    });
     res.status(200).send(team);
   } catch (e) {
     res.status(500).send();

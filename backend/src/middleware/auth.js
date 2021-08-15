@@ -19,6 +19,8 @@ const checkIfAuthenticated = (req, res, next) => {
       const userInfo = await admin.auth().verifyIdToken(authToken);
       const fetchUser = await User.findOne({ userId: userInfo.uid });
       req.authId = fetchUser._id;
+      req.role = fetchUser.role;
+
       return next();
     } catch (e) {
       return res

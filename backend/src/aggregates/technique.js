@@ -14,7 +14,6 @@ const allTechniques = async (id, filters, skip) => {
     let filter = {
       $match: {},
     };
-    console.log("this is filter", filt);
     if (filt !== []) {
       filter = {
         $match: {
@@ -29,6 +28,11 @@ const allTechniques = async (id, filters, skip) => {
     }
     console.log(convertFilters(filters));
     const doc = await Match.aggregate([
+      {
+        $match: {
+          private: false,
+        },
+      },
       {
         $unwind: {
           path: "$scores",

@@ -19,6 +19,7 @@ const {
 const { checkIfAuthenticated, checkIfAdmin } = require("../middleware/auth");
 const Wrestler = require("../db/models/wrestler");
 const Tournament = require("../db/models/tournament");
+const User = require("../db/models/user");
 
 /////BY WRESTLER ID (LIST for editing)////////
 
@@ -27,32 +28,72 @@ router.get(
   checkIfAuthenticated,
   async (req, res) => {
     try {
-      console.log(req.authId);
-      const wrestler = await Match.find({
-        $and: [
-          {
-            $or: [
-              { "redWrestler.id": req.params.id },
-              { "blueWrestler.id": req.params.id },
-            ],
-          },
-          { owner: req.authId },
-        ],
-      });
-      res.status(200).send(wrestler);
+      if (req.role === 300) {
+        const wrestler = await Match.find({
+          $and: [
+            {
+              $or: [
+                { "redWrestler.id": req.params.id },
+                { "blueWrestler.id": req.params.id },
+              ],
+            },
+            {
+              $or: [
+                { owner: req.authId },
+                { owner: "60a2a5803bb95bbc1c18b767" },
+              ],
+            },
+          ],
+        });
+        res.status(200).send(wrestler);
+      } else {
+        const wrestler = await Match.find({
+          $and: [
+            {
+              $or: [
+                { "redWrestler.id": req.params.id },
+                { "blueWrestler.id": req.params.id },
+              ],
+            },
+            {
+              $or: [{ owner: req.authId }],
+            },
+          ],
+        });
+        res.status(200).send(wrestler);
+      }
     } catch (e) {
       res.status(400).send();
     }
   }
 );
+
+router.get("/user/match/wrestler/publiclist/:id", async (req, res) => {
+  try {
+    const wrestler = await Match.find({
+      $and: [
+        {
+          $or: [
+            { "redWrestler.id": req.params.id },
+            { "blueWrestler.id": req.params.id },
+          ],
+        },
+        {
+          $or: [{ owner: "60a2a5803bb95bbc1c18b767" }],
+        },
+      ],
+    });
+    res.status(200).send(wrestler);
+  } catch (e) {
+    res.status(400).send();
+  }
+});
 ////BY WRESTLER///////
 router.get(
   "/user/match/wrestler/:id",
   checkIfAuthenticated,
   async (req, res) => {
     try {
-      console.log("snkadnkan");
-      console.log(req);
       if (req.query.filters) {
         const filter = req.query.filters;
         const wrestler = await wrestlerMatches(
@@ -300,8 +341,6 @@ router.put("/user/match", checkIfAuthenticated, async (req, res) => {
 router.put("/user/match/:id", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
-    console.log(req.params);
-    console.log(req.body);
 
     const match = await Match.findByIdAndUpdate(
       req.params.id,
@@ -310,7 +349,8 @@ router.put("/user/match/:id", checkIfAuthenticated, async (req, res) => {
         new: true,
       }
     );
-res.send(200).send(match)  } catch (e) {
+    res.send(200).send(match);
+  } catch (e) {
     res.status(500).send(e);
   }
 });
@@ -319,9 +359,8 @@ res.send(200).send(match)  } catch (e) {
 router.delete("/user/match/:id", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
-    console.log(req.params);
-    console.log(req.body);
-
+    // console.log(req.params);
+    // console.log(req.body);
     // const match = await Match.findByIdAndDelete(req.params.id, req.body, {
     //   new: true,
     // });

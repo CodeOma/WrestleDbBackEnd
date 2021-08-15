@@ -89,10 +89,12 @@ router.get("/user/takedown/all", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
 
-    const takedown = await Takedown.find({ owner: req.authId });
+    const takedown = await Takedown.find({
+      $or: [{ owner: req.authId }, { owner: "60a2a5803bb95bbc1c18b767" }],
+    });
     res.status(200).send(takedown);
   } catch (e) {
-    res.status(500).send();
+    res.status(500).send(e);
   }
 });
 router.get("/user/takedown/:id", checkIfAuthenticated, async (req, res) => {
@@ -106,7 +108,7 @@ router.get("/user/takedown/:id", checkIfAuthenticated, async (req, res) => {
     res.status(200).send(takedown);
   } catch (e) {
     console.log(e);
-    res.status(500).send();
+    res.status(500).send(e);
   }
 });
 /////////////UPDATE///////////////
@@ -152,7 +154,6 @@ router.put("/user/takedown", checkIfAuthenticated, async (req, res) => {
 router.delete("/user/takedown/:id", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
-    console.log("omaklask");
     console.log(req.params);
     console.log(req.body);
 

@@ -9,7 +9,6 @@ const { admin } = require("../auth/firebase");
 // };
 
 const createUser = async (req, res) => {
-  console.log(req.body);
   const { email, phoneNumber, password, firstName, lastName } = req.body;
 
   const user = await admin.auth().createUser({

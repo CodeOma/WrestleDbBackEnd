@@ -8,13 +8,13 @@ const { allTechniques } = require("../aggregates/technique");
 
 ////Fetch ALL TECHNIQUES////
 
-router.get("/techniques/all", checkIfAuthenticated, async (req, res) => {
+router.get("/techniques/all", async (req, res) => {
   try {
+    console.log("YOLO");
     const id = "";
     const filter = req.query.filters;
     const skip = req.query.skip;
     const techniques = await allTechniques(id, filter, skip);
-    // const techniques = await allTechniques();
     res.status(200).send(techniques);
   } catch (e) {
     console.log("errorrrr");

@@ -49,7 +49,7 @@ const wrestlerTakedowns = async name => {
       },
     },
 
-    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: false } },
+    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: true } },
 
     {
       $group: {
@@ -101,7 +101,7 @@ const wrestlerConceded = async name => {
       },
     },
 
-    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: false } },
+    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: true } },
 
     {
       $group: {
@@ -141,7 +141,7 @@ const takedownsConceded = async name => {
       },
     },
 
-    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: false } },
+    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: true } },
 
     {
       $group: {
@@ -191,7 +191,7 @@ const scoring = async name => {
       },
     },
 
-    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: false } },
+    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: true } },
 
     {
       $group: {
@@ -245,7 +245,7 @@ const conceded = async name => {
       },
     },
 
-    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: false } },
+    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: true } },
 
     {
       $group: {
@@ -271,20 +271,26 @@ const gotCountered = async name => {
     {
       $match: {
         $or: [
-          { "redWrestler.fullName": name },
-          { "blueWrestler.fullName": name },
+          {
+            "redWrestler.fullName": name,
+          },
+          {
+            "blueWrestler.fullName": name,
+          },
         ],
       },
     },
     {
-      $project: { _id: name, url: "$url", scores: "$scores" },
+      $project: {
+        _id: name,
+        url: 1,
+        scores: 1,
+      },
     },
-
     {
       $project: {
         _id: 1,
         url: "$url",
-
         takedowns: {
           $filter: {
             input: "$scores",
@@ -296,19 +302,41 @@ const gotCountered = async name => {
         },
       },
     },
-
-    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: false } },
-
     {
-      $group: {
-        _id: { offdef: "$takedowns.offdef", name: "$takedowns.name" },
-        takedowns: { $push: { takedowns: "$takedowns", url: "$url" } },
+      $unwind: {
+        path: "$takedowns",
+        preserveNullAndEmptyArrays: false,
       },
     },
-
-    // {
-    //   $sort: { takedowns: -1 },
-    // },
+    {
+      $match: {
+        "takedowns.offdef": "Defensive",
+      },
+    },
+    {
+      $group: {
+        _id: "$takedowns.oppDefendedShot",
+        takedowns: {
+          $push: {
+            takedowns: "$takedowns",
+            url: "$url",
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        takedowns: "$takedowns",
+        number: {
+          $size: "$takedowns",
+        },
+      },
+    },
+    {
+      $sort: {
+        number: -1,
+      },
+    },
   ]);
   console.log(doc);
   return doc;
@@ -344,7 +372,7 @@ const getScoreTypes = async name => {
       },
     },
 
-    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: false } },
+    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: true } },
 
     {
       $group: {
@@ -370,56 +398,147 @@ const setups = async name => {
     {
       $match: {
         $or: [
-          { "redWrestler.fullName": name },
-          { "blueWrestler.fullName": name },
+          {
+            "redWrestler.fullName": name,
+          },
+          {
+            "blueWrestler.fullName": name,
+          },
         ],
       },
+    },
+    {
       $project: {
-        _id: "$scores.fullName",
-        url: "$url",
-        scores: {
+        _id: name,
+        url: 1,
+        scores: 1,
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        url: 1,
+        takedowns: {
           $filter: {
-            input: "$scores.totalScores",
+            input: "$scores",
             as: "sc",
             cond: {
-              $ne: ["$$sc.takedown", []],
+              $eq: ["$$sc.fullName", name],
             },
           },
         },
       },
     },
     {
-      $unwind: "$scores",
-    },
-
-    {
-      $project: {
-        _id: 0,
-        url: "$url",
-        takedowns: "$scores",
+      $unwind: {
+        path: "$takedowns",
+        preserveNullAndEmptyArrays: false,
       },
     },
-
-    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: false } },
     {
-      $unwind: { path: "$takedowns.setup", preserveNullAndEmptyArrays: false },
+      $unwind: {
+        path: "$takedowns.setup",
+        preserveNullAndEmptyArrays: false,
+      },
     },
-
     {
       $group: {
         _id: "$takedowns.setup",
-        takedowns: { $push: { takedowns: "$takedowns", url: "$url" } },
+        takedowns: {
+          $push: {
+            takedowns: "$takedowns",
+            url: "$url",
+          },
+        },
       },
     },
-
     {
       $project: {
         takedowns: "$takedowns",
-        number: { $size: "$takedowns" },
+        number: {
+          $size: "$takedowns",
+        },
       },
     },
     {
-      $sort: { number: -1 },
+      $sort: {
+        number: -1,
+      },
+    },
+  ]);
+  return doc;
+};
+const oppSetups = async name => {
+  const doc = await Match.aggregate([
+    {
+      $match: {
+        $or: [
+          {
+            "redWrestler.fullName": name,
+          },
+          {
+            "blueWrestler.fullName": name,
+          },
+        ],
+      },
+    },
+    {
+      $project: {
+        _id: name,
+        url: 1,
+        scores: 1,
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        url: 1,
+        takedowns: {
+          $filter: {
+            input: "$scores",
+            as: "sc",
+            cond: {
+              $ne: ["$$sc.fullName", name],
+            },
+          },
+        },
+      },
+    },
+    {
+      $unwind: {
+        path: "$takedowns",
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    {
+      $unwind: {
+        path: "$takedowns.setup",
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    {
+      $group: {
+        _id: "$takedowns.setup",
+        takedowns: {
+          $push: {
+            takedowns: "$takedowns",
+            url: "$url",
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        takedowns: "$takedowns",
+        number: {
+          $size: "$takedowns",
+        },
+      },
+    },
+    {
+      $sort: {
+        number: -1,
+      },
     },
   ]);
   return doc;
@@ -515,6 +634,7 @@ const wrestlerMatches = async (id, filters, skip) => {
               "blueWrestler.id": mongoose.Types.ObjectId(id),
             },
           ],
+          private: false,
         },
       },
 
@@ -635,12 +755,172 @@ const wrestlerMatches = async (id, filters, skip) => {
   }
 };
 
+const scorecounter = async name => {
+  const doc = await Match.aggregate([
+    {
+      $match: {
+        $or: [
+          {
+            "redWrestler.fullName": name,
+          },
+          {
+            "blueWrestler.fullName": name,
+          },
+        ],
+      },
+    },
+    {
+      $project: {
+        _id: name,
+        url: 1,
+        scores: 1,
+      },
+    },
+    {
+      $project: {
+        _id: 1,
+        url: "$url",
+        takedowns: {
+          $filter: {
+            input: "$scores",
+            as: "sc",
+            cond: {
+              $or: [
+                {
+                  $eq: ["$$sc.fullName", name],
+                },
+                {
+                  $and: [
+                    {
+                      $ne: ["$$sc.fullName", name],
+                    },
+                    {
+                      $eq: ["$$sc.offdef", "Defensive"],
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      },
+    },
+    {
+      $unwind: {
+        path: "$takedowns",
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    {
+      $project: {
+        url: 1,
+        takedowns: {
+          $cond: [
+            {
+              $eq: ["$takedowns.fullName", name],
+            },
+            {
+              id: "$takedowns.id",
+              round: "$takedowns.round",
+              fullName: name,
+              takedown: "$takedowns.takedown",
+              offdef: "$takedowns.offdef",
+              position: "$takedowns.position",
+              oppDefendedShot: "",
+              type: "$takedowns.type",
+              setup: "$takedowns.setup",
+              details: "$takedowns.details",
+              videoTime: "$takedowns.videoTime",
+              time: "$takedowns.time",
+              points: "$takedowns.points",
+              countered: "false",
+            },
+            {
+              id: "$takedowns.id",
+              round: "$takedowns.round",
+              fullName: name,
+              takedown: "$takedowns.oppDefendedShot",
+              offdef: "$takedowns.offdef",
+              position: "$takedowns.position",
+              counter: "$takedowns.takedown",
+              type: "$takedowns.type",
+              setup: "$takedowns.setup",
+              details: "$takedowns.details",
+              videoTime: "$takedowns.videoTime",
+              time: "$takedowns.time",
+              points: "$takedowns.points",
+              countered: "true",
+            },
+          ],
+        },
+      },
+    },
+    {
+      $match: {
+        "takedowns.takedown": {
+          $ne: null,
+        },
+      },
+    },
+    {
+      $group: {
+        _id: "$takedowns.takedown",
+        takedowns: {
+          $push: {
+            takedowns: "$takedowns",
+            url: "$url",
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        takedowns: "$takedowns",
+        number: {
+          $size: "$takedowns",
+        },
+        sc: {
+          $filter: {
+            input: "$takedowns",
+            as: "sc",
+            cond: {
+              $eq: ["$$sc.takedowns.countered", "false"],
+            },
+          },
+        },
+        c: {
+          $filter: {
+            input: "$takedowns",
+            as: "sc",
+            cond: {
+              $eq: ["$$sc.takedowns.countered", "true"],
+            },
+          },
+        },
+      },
+    },
+    {
+      $match: {
+        c: { $ne: [] },
+      },
+    },
+    {
+      $sort: {
+        number: -1,
+      },
+    },
+  ]);
+  return doc;
+};
+
+exports.scorecounter = scorecounter;
 exports.wrestlerMatches = wrestlerMatches;
 exports.gotCountered = gotCountered;
 exports.getScoreTypes = getScoreTypes;
 exports.scoring = scoring;
 exports.conceded = conceded;
 exports.setups = setups;
+exports.oppSetups = oppSetups;
 
 exports.wrestlerTakedowns = wrestlerTakedowns;
 exports.wrestlerConceded = wrestlerConceded;

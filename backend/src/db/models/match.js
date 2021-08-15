@@ -58,7 +58,7 @@ const matchSchema = mongoose.Schema({
   },
   organization: {
     type: String,
-    required: true,
+    // required: true,
   },
 });
 

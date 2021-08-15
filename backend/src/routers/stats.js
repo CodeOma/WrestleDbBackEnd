@@ -7,6 +7,8 @@ const Tournament = require("../db/models/tournament");
 const { generalStats, individualProfileStats } = require("../aggregates/stats");
 const {
   totalTechnique,
+  totalDefTechnique,
+
   totalSetup,
   totalSpecific,
   allWrestlers,
@@ -17,6 +19,9 @@ const {
   wrestlerTakedowns,
   wrestlerConceded,
   takedownsConceded,
+  scorecounter,
+  oppSetups,
+  setups,
   scoring,
   conceded,
   gotCountered,
@@ -43,16 +48,17 @@ const {
 // });
 // //   } catch (e) {}
 // // });
-router.get("/holyshit", async (req, res) => {
+router.get("/stats/all", async (req, res) => {
   try {
-    const totSetup = await wrestlerStats(["6042f3208e4ff31a532f7324"]);
     // const All = await allWrestlers();
-    // const totSetup = await totalSetup();
-    // const totTechnique = await totalTechnique();
+    const totSetup = await totalSetup();
+    const totTechnique = await totalTechnique();
+    const totDefTechnique = await totalDefTechnique();
+
     // const totSpecific = await totalSpecific("Double Leg");
-    res.send(totSetup);
+    res.send([totTechnique, totDefTechnique, totSetup]);
   } catch (e) {
-    res.status(400).send();
+    res.status(400).send(e);
   }
 });
 
@@ -65,13 +71,22 @@ router.get("/stats/wrestler/:id", async (req, res) => {
     const takedownsGiven = await conceded(wrestler[0].fullName);
     const scoreTypes = await getScoreTypes(wrestler[0].fullName);
     const countered = await gotCountered(wrestler[0].fullName);
-    // const setup = await setups(wrestler[0].fullName);
+    const setup = await setups(wrestler[0].fullName);
+    const oppSetup = await oppSetups(wrestler[0].fullName);
 
     const stats = await individualProfileStats(req.params.id);
-    console.log(stats);
-    res.send([stats, takedownsGiven, takedownsScored, countered, scoreTypes]);
+    const sc = await scorecounter(wrestler[0].fullName);
+    res.send([
+      stats,
+      takedownsGiven,
+      takedownsScored,
+      countered,
+      scoreTypes,
+      setup,
+      oppSetup,
+      sc,
+    ]);
   } catch (e) {
-    console.log(e);
     res.status(400).send(e);
   }
 });

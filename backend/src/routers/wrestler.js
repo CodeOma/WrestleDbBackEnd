@@ -103,7 +103,9 @@ router.get(
       let query = {
         $and: [
           { $or: [{ fullName: { $regex: q, $options: "i" } }] },
-          { owner: req.authId },
+          {
+            $or: [{ owner: req.authId }, { owner: "60a2a5803bb95bbc1c18b767" }],
+          },
         ],
       };
       const wrestler = await Wrestler.find(query).sort({ date: -1 }).limit(10);
@@ -145,7 +147,9 @@ router.get("/autosearch/wrestler/:key", async (req, res) => {
 router.get("/user/wrestler/all", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
-    const wrestler = await Wrestler.find({ owner: req.authId });
+    const wrestler = await Wrestler.find({
+      $or: [{ owner: req.authId }, { owner: "60a2a5803bb95bbc1c18b767" }],
+    });
     res.status(200).send(wrestler);
   } catch (e) {
     console.log("ERROR", e.message);
@@ -184,6 +188,8 @@ router.put("/user/wrestler", checkIfAuthenticated, async (req, res) => {
     res.status(500).send(e);
   }
 });
+// $or:[{owner: req.authId },{owner:  '60a2a5803bb95bbc1c18b767'}]
+
 router.get("/user/wrestler/:id", checkIfAuthenticated, async (req, res) => {
   try {
     const wrestler = await Wrestler.find({

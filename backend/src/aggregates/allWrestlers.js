@@ -48,7 +48,7 @@ const totalSpecific = async technique => {
       },
     },
 
-    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: false } },
+    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: true } },
 
     {
       $group: {
@@ -72,49 +72,109 @@ const totalSpecific = async technique => {
 const totalTechnique = async () => {
   const doc = await Match.aggregate([
     {
+      $match: {},
+    },
+    {
       $project: {
-        _id: "$scores.fullName",
-        url: "$url",
-        scores: {
-          $filter: {
-            input: "$scores.totalScores",
-            as: "sc",
-            cond: {
-              $ne: ["$$sc.takedown", []],
-            },
+        url: 1,
+        takedowns: "$scores",
+      },
+    },
+    {
+      $unwind: {
+        path: "$takedowns",
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    {
+      $match: {
+        "takedowns.takedown": {
+          $ne: null,
+        },
+        "takedowns.offdef": "Offensive",
+      },
+    },
+    {
+      $group: {
+        _id: "$takedowns.takedown",
+        takedowns: {
+          $push: {
+            takedowns: "$takedowns",
+            url: "$url",
           },
         },
       },
     },
     {
-      $unwind: "$scores",
+      $project: {
+        takedowns: "$takedowns",
+        number: {
+          $size: "$takedowns",
+        },
+      },
     },
-
+    {
+      $sort: {
+        number: -1,
+      },
+    },
+    {
+      $limit: 10,
+    },
+  ]);
+  return doc;
+};
+const totalDefTechnique = async () => {
+  const doc = await Match.aggregate([
+    {
+      $match: {},
+    },
     {
       $project: {
-        _id: 0,
-        url: "$url",
+        url: 1,
         takedowns: "$scores",
       },
     },
-
-    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: false } },
-
+    {
+      $unwind: {
+        path: "$takedowns",
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    {
+      $match: {
+        "takedowns.takedown": {
+          $ne: null,
+        },
+        "takedowns.offdef": "Defensive",
+      },
+    },
     {
       $group: {
         _id: "$takedowns.takedown",
-        takedowns: { $push: { takedowns: "$takedowns", url: "$url" } },
+        takedowns: {
+          $push: {
+            takedowns: "$takedowns",
+            url: "$url",
+          },
+        },
       },
     },
-
     {
       $project: {
         takedowns: "$takedowns",
-        number: { $size: "$takedowns" },
+        number: {
+          $size: "$takedowns",
+        },
       },
     },
     {
-      $sort: { number: -1 },
+      $sort: {
+        number: -1,
+      },
+    },
+    {
+      $limit: 10,
     },
   ]);
   return doc;
@@ -122,52 +182,52 @@ const totalTechnique = async () => {
 const totalSetup = async () => {
   const doc = await Match.aggregate([
     {
+      $match: {},
+    },
+    {
       $project: {
-        _id: "$scores.fullName",
-        url: "$url",
-        scores: {
-          $filter: {
-            input: "$scores.totalScores",
-            as: "sc",
-            cond: {
-              $ne: ["$$sc.takedown", []],
-            },
+        url: 1,
+        takedowns: "$scores",
+      },
+    },
+    {
+      $unwind: {
+        path: "$takedowns",
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    {
+      $unwind: {
+        path: "$takedowns.setup",
+        preserveNullAndEmptyArrays: false,
+      },
+    },
+    {
+      $group: {
+        _id: "$takedowns.setup",
+        takedowns: {
+          $push: {
+            takedowns: "$takedowns",
+            url: "$url",
           },
         },
       },
     },
     {
-      $unwind: "$scores",
-    },
-
-    {
-      $project: {
-        _id: 0,
-        url: "$url",
-        takedowns: "$scores",
-      },
-    },
-
-    { $unwind: { path: "$takedowns", preserveNullAndEmptyArrays: false } },
-    {
-      $unwind: { path: "$takedowns.setup", preserveNullAndEmptyArrays: false },
-    },
-
-    {
-      $group: {
-        _id: "$takedowns.setup",
-        takedowns: { $push: { takedowns: "$takedowns", url: "$url" } },
-      },
-    },
-
-    {
       $project: {
         takedowns: "$takedowns",
-        number: { $size: "$takedowns" },
+        number: {
+          $size: "$takedowns",
+        },
       },
     },
     {
-      $sort: { number: -1 },
+      $sort: {
+        number: -1,
+      },
+    },
+    {
+      $limit: 10,
     },
   ]);
   return doc;
@@ -596,7 +656,7 @@ const wrestlerStats = async (id, sortParameter, direction) => {
 };
 exports.wrestlerStats = wrestlerStats;
 exports.allWrestlers = allWrestlers;
-
+exports.totalDefTechnique = totalDefTechnique;
 exports.totalTechnique = totalTechnique;
 exports.totalSetup = totalSetup;
 exports.totalSpecific = totalSpecific;

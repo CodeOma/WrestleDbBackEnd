@@ -73,7 +73,9 @@ router.get("/user/type/all", checkIfAuthenticated, async (req, res) => {
   try {
     //Validation
 
-    const type = await Type.find({ owner: req.authId });
+    const type = await Type.find({
+      $or: [{ owner: req.authId }, { owner: "60a2a5803bb95bbc1c18b767" }],
+    });
     res.status(200).send(type);
   } catch (e) {
     res.status(500).send();

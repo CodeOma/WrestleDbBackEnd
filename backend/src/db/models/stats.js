@@ -2,37 +2,7 @@ const mongoose = require("mongoose");
 const Wrestler = require("./wrestler");
 const Match = require("./match");
 
-// db.games.aggregate([
-//   {
-//     $match : {
-//       date : {
-//         $gt : ISODate("1999-08-01T00:00:00Z"),
-//         $lt : ISODate("2000-08-01T00:00:00Z")
-//       }
-//     }
-//   },
-//   {
-//     $unwind : '$teams'
-//   },
-//   {
-//     $match : {
-//       'teams.won' : 1
-//     }
-//   },
-//   {
-//     $group : {
-//       _id : '$teams.name',
-//       wins : { $sum : 1 }
-//     }
-//   },
-//   {
-//     $sort : { wins : -1 }
-//   },
-//   {
-//     $limit : 5
-//   }
-// ]);
-
+const statsSchema = mongoose.Schema({});
 // const statsSchema = mongoose.Schema({
 //   schemaVersion: {
 //     type: Number,
@@ -88,6 +58,6 @@ const Match = require("./match");
 //   },
 // });
 
-// const Stats = mongoose.model("Stats", statsSchema);
+const Stats = mongoose.model("Stats", statsSchema);
 
-// module.exports = Stats;
+module.exports = Stats;

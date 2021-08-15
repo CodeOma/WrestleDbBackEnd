@@ -4,6 +4,11 @@ const mongoose = require("mongoose");
 const generalStats = async (id, sortParameter, direction) => {
   const doc = await Wrestler.aggregate([
     {
+      $match: {
+        private: false,
+      },
+    },
+    {
       $lookup: {
         from: "matches",
         localField: "_id",
@@ -451,7 +456,7 @@ const generalStats = async (id, sortParameter, direction) => {
             {
               $avg: "$matches.totalScored",
             },
-            0,
+            2,
           ],
         },
         avgPCPM: {
@@ -459,7 +464,7 @@ const generalStats = async (id, sortParameter, direction) => {
             {
               $avg: "$matches.oppScores.total",
             },
-            0,
+            2,
           ],
         },
         scoreFirstPerc: {
