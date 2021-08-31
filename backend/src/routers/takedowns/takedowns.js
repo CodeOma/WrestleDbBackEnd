@@ -67,15 +67,15 @@ router.get(
     try {
       let q = req.params.key;
       let query = {
-        $or: [{ fullName: { $regex: q, $options: "i" } }],
+        $or: [{ takedown: { $regex: q, $options: "i" } }],
       };
       const takedown = await Takedown.find(query).sort({ date: -1 }).limit(10);
 
       if (!takedown) {
         return res.status(404).send();
       }
-      const array = await takedown.map(wres => {
-        return { title: wres.fullName, id: wres._id };
+      const array = await takedown.map(td => {
+        return { title: td.takedown, id: td._id };
       });
       res.send(array);
     } catch (error) {

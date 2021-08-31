@@ -2,7 +2,11 @@ const mongoose = require("mongoose");
 const Wrestler = require("./wrestler");
 const Match = require("./match");
 
-const statsSchema = mongoose.Schema({});
+const allStatsSchema = mongoose.Schema({
+  array: [],
+});
+const wrestlerStatsSchema = mongoose.Schema({});
+
 // const statsSchema = mongoose.Schema({
 //   schemaVersion: {
 //     type: Number,
@@ -58,6 +62,7 @@ const statsSchema = mongoose.Schema({});
 //   },
 // });
 
-const Stats = mongoose.model("Stats", statsSchema);
+const AllStats = mongoose.model("AllStats", allStatsSchema);
+const WrestlerStats = mongoose.model("WrestlerStats", wrestlerStatsSchema);
 
-module.exports = Stats;
+module.exports = { AllStats, WrestlerStats };

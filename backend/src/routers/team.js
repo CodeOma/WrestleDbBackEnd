@@ -8,7 +8,8 @@ const { teamMatches } = require("../aggregates/team");
 /////////Get Teams///////////
 router.get("/team", async (req, res) => {
   try {
-    const team = await Team.find({});
+    const team = await Team.find({ owner: "60a2a5803bb95bbc1c18b767" });
+    console.log(team);
     res.status(200).send(team);
   } catch (e) {
     res.status(400).send();

@@ -20,6 +20,7 @@ const { checkIfAuthenticated, checkIfAdmin } = require("../middleware/auth");
 const Wrestler = require("../db/models/wrestler");
 const Tournament = require("../db/models/tournament");
 const User = require("../db/models/user");
+const { updateStatsAll } = require("../helpers/createStats");
 
 /////BY WRESTLER ID (LIST for editing)////////
 
@@ -332,6 +333,7 @@ router.put("/user/match", checkIfAuthenticated, async (req, res) => {
       style: "Freestyle",
       organization: "United World Wrestling",
     });
+    const updateStats = await updateStatsAll();
     res.status(200).send(match);
   } catch (e) {
     console.log(e);

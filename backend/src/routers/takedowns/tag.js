@@ -48,8 +48,8 @@ router.get(
       if (!tag) {
         return res.status(404).send();
       }
-      const array = await tag.map(wres => {
-        return { title: wres.fullName, id: wres._id };
+      const array = await tag.map(t => {
+        return { title: t.tag, id: t._id };
       });
       res.send(array);
     } catch (error) {

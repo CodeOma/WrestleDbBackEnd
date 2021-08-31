@@ -58,8 +58,8 @@ router.get(
       if (!type) {
         return res.status(404).send();
       }
-      const array = await type.map(wres => {
-        return { title: wres.fullName, id: wres._id };
+      const array = await type.map(t => {
+        return { title: t.type, id: t._id };
       });
       res.send(array);
     } catch (error) {

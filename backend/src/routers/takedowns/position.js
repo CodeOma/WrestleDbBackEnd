@@ -58,12 +58,12 @@ router.get(
       if (!position) {
         return res.status(404).send();
       }
-      const array = await position.map(wres => {
-        return { title: wres.fullName, id: wres._id };
+      const array = await position.map(pos => {
+        return { title: pos.position, id: pos._id };
       });
       res.send(array);
     } catch (error) {
-      error("MENDANDNEDDJAKSDNJASKD", error.message);
+      error(error.message);
       res.status(500).send;
     }
   }
