@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-mongoose.connect(process.env.DATABASE_OFFLINE, {
+mongoose.connect(process.env.DATABASE, {
   useNewUrlParser: true,
   useCreateIndex: true,
   useUnifiedTopology: true,
